@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: kazipay
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/kazipay}
+    username: ${DATABASE_USER:kazipay_app}
+    password: ${DATABASE_PASSWORD:kazipay_app}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  jackson:
+    default-property-inclusion: non_null
+    serialization.write-dates-as-timestamps: false
+server:
+  shutdown: graceful
+management:
+  endpoints.web.exposure.include: health,info,prometheus
+  endpoint.health.probes.enabled: true
+springdoc:
+  api-docs.path: /api-docs
+  swagger-ui.path: /swagger-ui
+kazipay:
+  outbox:
+    publish-delay: 5000

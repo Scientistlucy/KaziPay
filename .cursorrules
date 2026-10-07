@@ -1,0 +1,9 @@
+
+You are building KaziPay per docs/KAZIPAY_PROJECT_SPEC.md and docs/KAZIPAY_BACKEND_SPEC.md.
+- Java 21, Spring Boot 3.5.x, Spring Modulith, PostgreSQL, Flyway, MapStruct, Lombok.
+- Package by module (com.kazipay.<module>), not by layer. Modules talk via public API interfaces or events only.
+- Controllers -> services -> repositories. Use DTOs at the edge; never expose JPA entities.
+- Use BigDecimal for money and Jakarta Validation. Return RFC 7807 problem+json errors.
+- Every new table gets a Flyway migration. Never edit an applied migration.
+- Every tenant table has tenant_id plus Row-Level Security.
+- Write tests with every feature. Work on one build-order step at a time.
