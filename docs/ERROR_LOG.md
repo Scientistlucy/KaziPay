@@ -30,9 +30,7 @@
 
 | # | Date | Step | Category | Title | Severity | Status | ⭐ |
 |---|------|------|----------|-------|----------|--------|----|
-| 001 | 2026-10-08 | Step 1 | flyway | EXAMPLE — Flyway fails: permission denied for schema public | 🔴 | Solved | ⭐ |
-
-> Delete the EXAMPLE row and the EXAMPLE entry below once you have your own real entries.
+| 001 | 2026-10-24 | Step 6 | config | App fails to start: two DataSourceProperties beans | 🔴 | Solved | ⭐ |
 
 ---
 
@@ -95,61 +93,62 @@ mvn verify
 
 ## Log
 
-### #001 — EXAMPLE — Flyway fails: permission denied for schema public  ⭐
-> ⚠️ **This is a sample entry showing the format. It is NOT my real work. Delete it before submitting anything.**
-
-- **Date:** 2026-10-08
-- **Build step:** Step 1 – Foundation
-- **Category:** flyway
+### #001 — App fails to start: two DataSourceProperties beans  ⭐
+- **Date:** 2026-10-24
+- **Build step:** Step 6 – Clients (found while connecting the Neon development database)
+- **Category:** config
 - **Severity:** 🔴
 - **Status:** Solved
 - **Interview/video story?** Yes ⭐
 
 **1. What I was trying to do**
-Start the app for the first time so Flyway would create the V1 and V2 tables in Postgres.
+Start the backend against the new Neon database for the first time so Flyway would create every table.
 
 **2. What happened (the symptom)**
-The app crashed on startup. I expected the tables to be created; instead Flyway failed before running any migration.
+The application context failed before Flyway ran, so no tables were created. Earlier steps had only been exercised through unit tests, so this was the first full start of the app.
 
 **3. Exact error / logs**
 ```
-org.flywaydb.core.internal.exception.FlywaySqlException:
-Unable to create schema history table "public"."flyway_schema_history"
-ERROR: permission denied for schema public
+Error creating bean with name 'unwrappedDataSource' defined in class path resource
+[com/kazipay/common/tenant/TenantDataSourceConfig.class]: Unsatisfied dependency expressed through
+method 'unwrappedDataSource' parameter 0: No qualifying bean of type
+'org.springframework.boot.autoconfigure.jdbc.DataSourceProperties' available: expected single
+matching bean but found 2: kazipayDataSourceProperties,spring.datasource-org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
+APPLICATION FAILED TO START
 ```
 
 **4. How I reproduced it**
-```bash
-docker compose up -d
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```powershell
+Push-Location backend
+mvn -s .mvn\settings.xml spring-boot:run
 ```
 
 **5. What I tried that did NOT work**
-- Re-ran `docker compose down -v && up -d` → same error.
-- Granted ALL on the database to `kazipay_app` → still failed (wrong role).
+- Nothing else was tried. The message names both candidate beans, which pointed straight at the config class.
 
-**6. Root cause (in my own words)**
-Flyway was connecting with the restricted `kazipay_app` role, which can't create tables. The spec says Flyway must use the *owner* role over a separate connection, while the app uses the restricted role so Row-Level Security still applies. My `application-dev.yml` only had `spring.datasource.*` and no `spring.flyway.user/password`, so Flyway fell back to the app role.
+**6. Root cause**
+`TenantDataSourceConfig` declared its own `DataSourceProperties` bean bound to `spring.datasource`. Spring Boot's `DataSourceAutoConfiguration` registers one for the same prefix whether or not you define a `DataSource` yourself. The custom bean had a different name, so Boot didn't back off, and `unwrappedDataSource(DataSourceProperties)` had two beans to choose from.
 
 **7. The fix**
-Added dedicated Flyway credentials in `application-dev.yml`:
-```yaml
-spring:
-  flyway:
-    url: ${FLYWAY_URL}
-    user: ${FLYWAY_USER}      # kazipay_owner
-    password: ${FLYWAY_PASSWORD}
+Removed the custom bean and injected Boot's auto-configured properties (`TenantDataSourceConfig.java`):
+```java
+// before
+@Bean
+@ConfigurationProperties("spring.datasource")
+DataSourceProperties kazipayDataSourceProperties() { return new DataSourceProperties(); }
+
+// after: removed; unwrappedDataSource(DataSourceProperties) receives Boot's bean
 ```
 
 **8. How I verified it is fixed**
-App started, Flyway applied V1 and V2, and `SchemaIntegrityTest` confirmed the app role is not the table owner.
+The app started against Neon, Flyway applied V1, V2, V3, V4, V9 and V11, and `/actuator/health` returned `UP`. A Spring context test would catch this if it came back. The suite doesn't have one yet, which is why unit tests never noticed.
 
 **9. What I learned / how to avoid it**
-Schema ownership and runtime permissions are separate concerns. RLS only works if the app role is *not* the owner of the tables.
+Check which beans Spring Boot auto-configures before declaring your own of the same type. Add at least one test that starts the full application context, so wiring errors fail in CI instead of at first deploy.
 
 **10. Links**
-- Commit: <add link>
-- AI used? Yes — Cursor generated the config; I diagnosed the wrong-role cause myself by checking which user Flyway logged.
+- Commit: `fix(tenant): remove duplicate DataSourceProperties bean`
+- AI used? Yes. Claude Code diagnosed and fixed it. I confirmed by starting the app against Neon and checking the migrations and the health endpoint.
 
 ---
 
