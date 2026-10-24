@@ -50,10 +50,9 @@ export function LoginPage() {
         <Button type="submit" size="lg" fullWidth loading={isSubmitting}>{isSubmitting ? 'Signing in…' : 'Sign in'}</Button>
       </form>
 
-      <div className="my-6 flex items-center gap-3 text-caption text-ink-400"><span className="h-px flex-1 bg-ink-200" />or<span className="h-px flex-1 bg-ink-200" /></div>
-      <Button variant="secondary" size="lg" fullWidth onClick={() => navigate('/')}>Email me a sign-in link</Button>
+      <p className="mt-4 text-center"><Button variant="link" onClick={() => navigate('/')}>Email me a sign-in link instead</Button></p>
 
-      <p className="mt-8 text-center text-body text-ink-500">
+      <p className="mt-10 border-t border-ink-200 pt-6 text-center text-body text-ink-500">
         New to KaziPay? <Link to="/register" className="rounded-sm font-semibold text-brand-600 hover:text-brand-700 focus-ring">Create a workspace</Link>
       </p>
     </AuthLayout>

@@ -79,12 +79,7 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <NavGroup label="Money" items={money} onNavigate={onNavigate} />
       </nav>
 
-      <div className="space-y-3 border-t border-white/10 p-3">
-        <div className="rounded-lg bg-white/[0.06] p-3.5">
-          <p className="text-small font-semibold">Get paid faster</p>
-          <p className="mt-1 text-caption leading-[18px] text-white/60">Connect your M-Pesa Paybill so clients can pay invoices in one tap.</p>
-          <NavLink to="/settings" onClick={onNavigate} className="mt-2.5 inline-flex text-caption font-semibold text-brand-300 hover:text-white">Set up M-Pesa</NavLink>
-        </div>
+      <div className="border-t border-white/10 p-3">
         <NavGroup items={[{ to: '/settings', label: 'Settings', icon: MdOutlineSettings }]} onNavigate={onNavigate} />
       </div>
     </div>

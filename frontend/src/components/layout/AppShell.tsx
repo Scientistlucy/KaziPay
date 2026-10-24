@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { useEffect, useState } from 'react'
 import {
-  MdLogout, MdMenu, MdNotificationsNone, MdOutlineHelpOutline, MdOutlinePersonOutline, MdOutlineSettings, MdPause, MdPlayArrow, MdSearch,
+  MdLogout, MdMenu, MdNotificationsNone, MdOutlinePersonOutline, MdOutlineSettings, MdPause, MdPlayArrow, MdSearch,
 } from 'react-icons/md'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../../lib/cn'
@@ -61,7 +61,6 @@ function TimerWidget() {
 }
 
 function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onOpenSearch: () => void }) {
-  const toast = useToast()
   const navigate = useNavigate()
   return (
     <header
@@ -80,7 +79,6 @@ function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onOpenSear
       </button>
       <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
         <TimerWidget />
-        <IconButton icon={MdOutlineHelpOutline} label="Help and shortcuts" className="hidden sm:inline-flex" onClick={() => toast({ tone: 'info', title: 'Press Ctrl K anywhere', description: 'Search clients, projects and invoices, or jump to any page.' })} />
         <Menu
           width="w-80"
           trigger={
