@@ -1,18 +1,16 @@
 import { useMemo, useState } from 'react'
-import type { IconType } from 'react-icons'
 import {
-  MdAdd, MdMoreHoriz, MdOutlineBlock, MdOutlineDrafts, MdOutlineFileDownload, MdOutlineReceiptLong, MdOutlineSend, MdOutlineTaskAlt, MdOutlineVisibility, MdOutlineWarningAmber,
+  MdAdd, MdMoreHoriz, MdOutlineBlock, MdOutlineFileDownload, MdOutlineReceiptLong, MdOutlineSend, MdOutlineVisibility,
 } from 'react-icons/md'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { StatusBadge } from '../components/ui/Badge'
 import { Button, IconButton } from '../components/ui/Button'
 import { DataTable, type Column } from '../components/ui/DataTable'
-import { Icon } from '../components/ui/Icon'
 import { ConfirmDialog } from '../components/ui/Modal'
 import { Menu, MenuItem, MenuSeparator } from '../components/ui/Menu'
 import { PageContainer, PageHeader, SearchInput } from '../components/ui/Page'
 import { Skeleton } from '../components/ui/Skeleton'
 import { EmptyState, ErrorState, NoResults } from '../components/ui/States'
+import { PaymentRail } from '../components/ui/Stepper'
 import { useToast } from '../components/ui/Toast'
 import { cn } from '../lib/cn'
 import { formatDate, formatMoney } from '../lib/format'
@@ -59,7 +57,7 @@ export function InvoicesPage() {
         </div>
       ),
     },
-    { id: 'client', header: 'Client', sortValue: (i) => i.clientName, cell: (i) => <span className="text-ink-800">{i.clientName}</span> },
+    { id: 'client', header: 'Client', sortValue: (i) => i.clientName, cell: (i) => <span className="whitespace-nowrap text-ink-800">{i.clientName}</span> },
     { id: 'issued', header: 'Issued', hideable: true, sortValue: (i) => i.issueDate, cell: (i) => <span className="whitespace-nowrap text-small text-ink-600">{formatDate(i.issueDate)}</span> },
     {
       id: 'due', header: 'Due', sortValue: (i) => i.dueDate,
@@ -69,7 +67,7 @@ export function InvoicesPage() {
         return (
           <div className="whitespace-nowrap">
             <p className="text-small text-ink-700">{formatDate(i.dueDate)}</p>
-            {open && <p className={cn('text-caption', days < 0 ? 'font-semibold text-danger' : days <= 3 ? 'font-semibold text-warning' : 'text-ink-500')}>{dueLabel(i.dueDate)}</p>}
+            {open && <p className={cn('text-caption', days < 0 ? 'font-semibold text-danger' : days <= 3 ? 'font-semibold text-ink-900' : 'text-ink-500')}>{dueLabel(i.dueDate)}</p>}
           </div>
         )
       },
@@ -79,7 +77,7 @@ export function InvoicesPage() {
       id: 'balance', header: 'Balance', align: 'right', hideable: true, sortValue: (i) => invoiceTotals(i).balance,
       cell: (i) => { const { balance } = invoiceTotals(i); return <span className={balance > 0 && i.status !== 'DRAFT' && i.status !== 'VOID' ? 'text-ink-800' : 'text-ink-400'}>{balance > 0 && i.status !== 'VOID' ? formatMoney(balance, i.currency) : '—'}</span> },
     },
-    { id: 'status', header: 'Status', cell: (i) => <StatusBadge status={i.status} /> },
+    { id: 'status', header: 'Status', cell: (i) => <PaymentRail status={i.status} /> },
   ]
 
   return (
@@ -90,13 +88,14 @@ export function InvoicesPage() {
         actions={<Button leadingIcon={MdAdd} onClick={() => toast({ tone: 'info', title: 'The invoice editor arrives with Step 9', description: 'It will generate invoices from approved time and expenses.' })}>New invoice</Button>}
       />
 
-      <section aria-label="Filter by invoice status" className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {invoices.isPending ? Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-[92px] rounded-lg" />) : (
+      {/* Ledger strip that doubles as the status filter. */}
+      <section aria-label="Filter by invoice status" className="mb-6 grid grid-cols-2 overflow-hidden rounded-lg border border-ink-200 bg-white shadow-card lg:grid-cols-4">
+        {invoices.isPending ? Array.from({ length: 4 }, (_, i) => <div key={i} className="space-y-2 p-5"><Skeleton className="h-3 w-1/2" /><Skeleton className="h-6 w-2/3" /></div>) : (
           <>
-            <FilterCard icon={MdOutlineReceiptLong} label="Outstanding" value={formatMoney(totalOf(outstanding, 'balance'), 'KES', { compact: true })} detail={`${outstanding.length} invoices`} active={filter === 'OUTSTANDING'} onClick={() => setFilter(filter === 'OUTSTANDING' ? 'ALL' : 'OUTSTANDING')} />
-            <FilterCard icon={MdOutlineWarningAmber} label="Overdue" value={formatMoney(totalOf(overdue, 'balance'), 'KES', { compact: true })} detail={`${overdue.length} invoices`} tone="danger" active={filter === 'OVERDUE'} onClick={() => setFilter(filter === 'OVERDUE' ? 'ALL' : 'OVERDUE')} />
-            <FilterCard icon={MdOutlineDrafts} label="Drafts" value={drafts.length.toString()} detail="not sent yet" active={filter === 'DRAFT'} onClick={() => setFilter(filter === 'DRAFT' ? 'ALL' : 'DRAFT')} />
-            <FilterCard icon={MdOutlineTaskAlt} label="Paid" value={formatMoney(totalOf(paid, 'total'), 'KES', { compact: true })} detail={`${paid.length} invoices`} tone="success" active={filter === 'PAID'} onClick={() => setFilter(filter === 'PAID' ? 'ALL' : 'PAID')} />
+            <FilterCard label="Outstanding" value={formatMoney(totalOf(outstanding, 'balance'), 'KES', { compact: true })} detail={`${outstanding.length} invoices`} active={filter === 'OUTSTANDING'} onClick={() => setFilter(filter === 'OUTSTANDING' ? 'ALL' : 'OUTSTANDING')} />
+            <FilterCard label="Overdue" value={formatMoney(totalOf(overdue, 'balance'), 'KES', { compact: true })} detail={`${overdue.length} invoices`} alarm active={filter === 'OVERDUE'} onClick={() => setFilter(filter === 'OVERDUE' ? 'ALL' : 'OVERDUE')} />
+            <FilterCard label="Drafts" value={drafts.length.toString()} detail="not sent yet" active={filter === 'DRAFT'} onClick={() => setFilter(filter === 'DRAFT' ? 'ALL' : 'DRAFT')} />
+            <FilterCard label="Paid" value={formatMoney(totalOf(paid, 'total'), 'KES', { compact: true })} detail={`${paid.length} invoices`} active={filter === 'PAID'} onClick={() => setFilter(filter === 'PAID' ? 'ALL' : 'PAID')} />
           </>
         )}
       </section>
@@ -134,7 +133,7 @@ export function InvoicesPage() {
             <div>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0"><p className="font-semibold text-ink-900">{i.number}</p><p className="truncate text-small text-ink-500">{i.clientName}</p></div>
-                <StatusBadge status={i.status} />
+                <PaymentRail status={i.status} />
               </div>
               <div className="mt-2 flex items-baseline justify-between">
                 <span className="text-caption text-ink-500">{outstandingStatuses.includes(i.status) ? dueLabel(i.dueDate) : `Issued ${formatDate(i.issueDate)}`}</span>
@@ -161,26 +160,23 @@ export function InvoicesPage() {
   )
 }
 
-type FilterCardProps = { icon: IconType; label: string; value: string; detail: string; active: boolean; onClick: () => void; tone?: 'brand' | 'danger' | 'success' }
+type FilterCardProps = { label: string; value: string; detail: string; active: boolean; onClick: () => void; alarm?: boolean }
 
-function FilterCard({ icon, label, value, detail, active, onClick, tone = 'brand' }: FilterCardProps) {
-  const tile = { brand: 'bg-brand-50 text-brand-600', danger: 'bg-danger-soft text-danger', success: 'bg-success-soft text-success' }[tone]
+function FilterCard({ label, value, detail, active, onClick, alarm = false }: FilterCardProps) {
   return (
     <button
       type="button"
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'flex items-start gap-3 rounded-lg border bg-white p-4 text-left shadow-card transition-[border-color,box-shadow] duration-base focus-ring',
-        active ? 'border-brand-600 ring-1 ring-brand-600' : 'border-ink-200 hover:border-ink-300',
+        'relative border-ink-200 px-5 py-4 text-left transition-colors duration-base focus-ring [&:not(:first-child)]:border-l max-lg:[&:nth-child(3)]:border-l-0 max-lg:[&:nth-child(n+3)]:border-t',
+        'after:absolute after:inset-x-0 after:top-0 after:h-[3px] after:transition-colors after:duration-base',
+        active ? 'bg-brand-50/60 after:bg-brand-600' : 'hover:bg-ink-25 after:bg-transparent',
       )}
     >
-      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-md', tile)}><Icon icon={icon} size="md" /></span>
-      <span className="min-w-0">
-        <span className="block text-small font-medium text-ink-500">{label}</span>
-        <span className="block truncate text-[20px] font-bold tracking-[-0.01em] text-ink-900">{value}</span>
-        <span className="block text-caption text-ink-500">{detail}</span>
-      </span>
+      <span className="block text-overline uppercase text-ink-500">{label}</span>
+      <span className={cn('tnum mt-1 block truncate text-[22px] font-bold tracking-[-0.02em]', alarm ? 'text-danger' : 'text-ink-900')}>{value}</span>
+      <span className="block text-caption text-ink-500">{detail}</span>
     </button>
   )
 }

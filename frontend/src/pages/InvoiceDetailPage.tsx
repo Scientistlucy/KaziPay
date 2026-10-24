@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import {
-  MdArrowBack, MdCheck, MdMoreHoriz, MdOutlineBlock, MdOutlineContentCopy, MdOutlineFileDownload, MdOutlinePayments, MdOutlinePhoneIphone, MdOutlineSend,
+  MdArrowBack, MdMoreHoriz, MdOutlineBlock, MdOutlineContentCopy, MdOutlineFileDownload, MdOutlinePayments, MdOutlinePhoneIphone, MdOutlineSend,
 } from 'react-icons/md'
 import { Link, useParams } from 'react-router-dom'
 import { LogoMark } from '../components/layout/Logo'
 import { StatusBadge } from '../components/ui/Badge'
 import { Button, IconButton } from '../components/ui/Button'
-import { Card, CardBody, CardHeader } from '../components/ui/Card'
+import { Card, CardHeader } from '../components/ui/Card'
 import { Icon } from '../components/ui/Icon'
 import { ConfirmDialog } from '../components/ui/Modal'
 import { Menu, MenuItem, MenuSeparator } from '../components/ui/Menu'
@@ -14,6 +14,7 @@ import { PageContainer } from '../components/ui/Page'
 import { ProgressBar } from '../components/ui/Progress'
 import { LoadingRegion, Skeleton } from '../components/ui/Skeleton'
 import { ErrorState } from '../components/ui/States'
+import { Stepper } from '../components/ui/Stepper'
 import { useToast } from '../components/ui/Toast'
 import { MpesaRequestModal } from '../features/invoices/MpesaRequestModal'
 import { RecordPaymentModal } from '../features/invoices/RecordPaymentModal'
@@ -77,44 +78,34 @@ function InvoiceDetail({ invoice }: { invoice: Invoice }) {
               const copy = navigator.clipboard ? navigator.clipboard.writeText(link) : Promise.reject(new Error('Clipboard unavailable'))
               copy
                 .then(() => toast({ title: 'Pay link copied', description: 'Share it with your client by WhatsApp or email.' }))
-                .catch(() => toast({ tone: 'warning', title: 'Couldn’t copy automatically', description: link }))
+                .catch(() => toast({ tone: 'info', title: 'Couldn’t copy automatically', description: link }))
             }}>Copy pay link</MenuItem>
             {invoice.status !== 'VOID' && invoice.status !== 'PAID' && (<><MenuSeparator /><MenuItem icon={MdOutlineBlock} danger onSelect={() => setVoidOpen(true)}>Void invoice</MenuItem></>)}
           </Menu>
         </div>
       </header>
 
+      <Lifecycle invoice={invoice} />
+
       <div className="grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-8">
+        <div className="min-w-0 lg:col-span-8">
           <InvoiceDocument invoice={invoice} clientTaxId={client?.taxId} clientAddress={client?.address} />
         </div>
 
-        <aside className="space-y-5 lg:col-span-4">
-          <Card className="p-5">
-            <p className="text-small text-ink-500">{invoice.status === 'PAID' ? 'Paid in full' : 'Balance due'}</p>
-            <p className="tnum mt-1 text-[28px] font-bold leading-9 tracking-[-0.02em] text-ink-900">{formatMoney(invoice.status === 'PAID' ? totals.total : totals.balance, invoice.currency)}</p>
+        <aside className="min-w-0 space-y-5 lg:col-span-4">
+          <Card className="p-6">
+            <p className="text-overline uppercase text-ink-500">{invoice.status === 'PAID' ? 'Paid in full' : 'Balance due'}</p>
+            <p className={cn('tnum mt-1.5 text-[30px] font-bold leading-9 tracking-[-0.02em]', invoice.status === 'OVERDUE' ? 'text-danger' : 'text-ink-900')}>{formatMoney(invoice.status === 'PAID' ? totals.total : totals.balance, invoice.currency)}</p>
             {invoice.status !== 'VOID' && (
               <>
-                <ProgressBar className="mt-4" value={Math.min(invoice.amountPaid, totals.total)} max={totals.total} label="Share of invoice paid" tone={invoice.status === 'PAID' ? 'success' : 'brand'} />
+                <ProgressBar className="mt-5" value={Math.min(invoice.amountPaid, totals.total)} max={totals.total} label="Share of invoice paid" />
                 <div className="mt-2 flex justify-between text-caption text-ink-500">
                   <span className="tnum">{formatMoney(Math.min(invoice.amountPaid, totals.total), invoice.currency)} paid</span>
                   <span className={cn(invoice.status === 'OVERDUE' && 'font-semibold text-danger')}>{payable ? dueLabel(invoice.dueDate) : `Due ${formatDate(invoice.dueDate)}`}</span>
                 </div>
               </>
             )}
-            {payable && (
-              <div className="mt-5 grid gap-2">
-                <Button fullWidth leadingIcon={MdOutlinePhoneIphone} onClick={() => setMpesaOpen(true)}>Request M-Pesa payment</Button>
-                <Button fullWidth variant="secondary" leadingIcon={MdOutlinePayments} onClick={() => setRecordOpen(true)}>Record manual payment</Button>
-              </div>
-            )}
-          </Card>
-
-          <Card>
-            <CardHeader title="History" />
-            <CardBody>
-              <StatusHistory invoice={invoice} />
-            </CardBody>
+            {payable && <Button variant="secondary" fullWidth className="mt-5" leadingIcon={MdOutlinePayments} onClick={() => setRecordOpen(true)}>Record a payment received elsewhere</Button>}
           </Card>
 
           <Card>
@@ -162,7 +153,7 @@ function InvoiceDocument({ invoice, clientTaxId, clientAddress }: { invoice: Inv
     <article aria-label={`Invoice ${invoice.number}`} className="relative overflow-hidden rounded-lg border border-ink-200 bg-white shadow-card">
       <div className="h-1.5 bg-brand-600" aria-hidden />
       {invoice.status === 'PAID' && (
-        <div className="pointer-events-none absolute right-8 top-24 rotate-[-12deg] rounded-md border-[3px] border-success/40 px-4 py-1 text-[22px] font-extrabold uppercase tracking-[0.15em] text-success/50" aria-hidden>Paid</div>
+        <div className="pointer-events-none absolute right-8 top-24 rotate-[-12deg] rounded-md border-[3px] border-brand-600/35 px-4 py-1 text-[22px] font-extrabold uppercase tracking-[0.15em] text-brand-600/45" aria-hidden>Paid</div>
       )}
       <div className="p-6 sm:p-10">
         <div className="flex flex-col justify-between gap-6 sm:flex-row">
@@ -223,7 +214,7 @@ function InvoiceDocument({ invoice, clientTaxId, clientAddress }: { invoice: Inv
             <div className="flex justify-between"><dt className="text-ink-500">Subtotal</dt><dd className="text-ink-800">{formatMoney(totals.subtotal, invoice.currency)}</dd></div>
             <div className="flex justify-between"><dt className="text-ink-500">VAT (16%)</dt><dd className="text-ink-800">{formatMoney(totals.tax, invoice.currency)}</dd></div>
             <div className="flex justify-between border-t border-ink-200 pt-2.5 text-body"><dt className="font-semibold text-ink-900">Total</dt><dd className="font-semibold text-ink-900">{formatMoney(totals.total, invoice.currency)}</dd></div>
-            {invoice.amountPaid > 0 && <div className="flex justify-between"><dt className="text-ink-500">Paid</dt><dd className="text-success">−{formatMoney(Math.min(invoice.amountPaid, totals.total), invoice.currency)}</dd></div>}
+            {invoice.amountPaid > 0 && <div className="flex justify-between"><dt className="text-ink-500">Paid</dt><dd className="text-ink-800">−{formatMoney(Math.min(invoice.amountPaid, totals.total), invoice.currency)}</dd></div>}
             <div className="flex items-baseline justify-between rounded-md bg-brand-50 px-3 py-2.5"><dt className="font-semibold text-brand-900">Balance due</dt><dd className="text-heading text-brand-900">{formatMoney(totals.balance, invoice.currency)}</dd></div>
           </dl>
         </div>
@@ -239,32 +230,21 @@ function InvoiceDocument({ invoice, clientTaxId, clientAddress }: { invoice: Inv
   )
 }
 
-function StatusHistory({ invoice }: { invoice: Invoice }) {
-  const order = ['DRAFT', 'SENT', 'VIEWED', 'PARTIALLY_PAID', 'PAID']
-  const reached = invoice.status === 'OVERDUE' ? 2 : invoice.status === 'VOID' ? 1 : order.indexOf(invoice.status)
+/** The invoice's journey as a stepper: the full-size version of the payment rail. */
+function Lifecycle({ invoice }: { invoice: Invoice }) {
+  // Index of the current step; PAID marks every step done.
+  const current = { DRAFT: 1, SENT: 2, VIEWED: 3, OVERDUE: 3, PARTIALLY_PAID: 3, PAID: 4, VOID: 1 }[invoice.status]
   const steps = [
-    { label: 'Created', date: invoice.issueDate },
-    { label: 'Sent to client', date: invoice.issueDate },
-    { label: 'Viewed by client', date: invoice.issueDate },
-    // The payment date comes from the payments API; until then only the issue date is known.
-    { label: invoice.status === 'PAID' ? 'Paid in full' : 'Payment received', date: undefined },
+    { label: 'Created', description: formatDate(invoice.issueDate, 'short') },
+    { label: 'Sent', description: current > 1 ? formatDate(invoice.issueDate, 'short') : 'Not sent yet' },
+    { label: 'Viewed', description: current > 2 ? 'Opened by client' : 'Waiting' },
+    { label: invoice.status === 'PARTIALLY_PAID' ? 'Partly paid' : 'Paid', description: invoice.status === 'PAID' ? 'Settled' : `Due ${formatDate(invoice.dueDate, 'short')}` },
   ]
   return (
-    <ol className="space-y-4">
-      {steps.map((step, index) => {
-        const done = index <= Math.min(reached, 3) && !(index === 3 && reached < 3)
-        return (
-          <li key={step.label} className="flex items-center gap-3">
-            <span className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-full', done ? 'bg-brand-600 text-white' : 'border-2 border-ink-200 bg-white')}>
-              {done && <Icon icon={MdCheck} size="xs" />}
-            </span>
-            <span className={cn('flex-1 text-small', done ? 'font-medium text-ink-800' : 'text-ink-400')}>{step.label}</span>
-            {done && step.date && <span className="text-caption text-ink-500">{formatDate(step.date, 'short')}</span>}
-          </li>
-        )
-      })}
-      {invoice.status === 'OVERDUE' && <li className="rounded-md bg-danger-soft px-3 py-2 text-small font-semibold text-danger">Overdue since {formatDate(invoice.dueDate)}. A reminder is scheduled.</li>}
-      {invoice.status === 'VOID' && <li className="rounded-md bg-ink-100 px-3 py-2 text-small font-semibold text-ink-600">This invoice was voided and can’t be paid.</li>}
-    </ol>
+    <Card className="mb-6 flex flex-col gap-5 p-6 md:flex-row md:items-center md:justify-between">
+      <Stepper steps={steps} current={current} className="w-full" />
+      {invoice.status === 'OVERDUE' && <p className="max-w-[260px] text-small font-semibold text-danger md:text-right">Overdue since {formatDate(invoice.dueDate)}. A reminder is scheduled.</p>}
+      {invoice.status === 'VOID' && <p className="text-small font-semibold text-ink-600">Voided. This invoice can’t be paid.</p>}
+    </Card>
   )
 }

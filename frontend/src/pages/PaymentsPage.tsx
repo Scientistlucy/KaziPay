@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import type { IconType } from 'react-icons'
-import { MdOutlineAccountBalance, MdOutlineLink, MdOutlinePayments, MdOutlinePhoneIphone, MdOutlineCreditCard, MdOutlineSavings } from 'react-icons/md'
+import { MdOutlineAccountBalance, MdOutlinePayments, MdOutlinePhoneIphone, MdOutlineCreditCard, MdOutlineSavings } from 'react-icons/md'
 import { Link } from 'react-router-dom'
 import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { Icon } from '../components/ui/Icon'
-import { PageContainer, PageHeader, StatTile } from '../components/ui/Page'
+import { Figure, Figures, PageContainer, PageHeader } from '../components/ui/Page'
 import { LoadingRegion, Skeleton } from '../components/ui/Skeleton'
 import { EmptyState, ErrorState } from '../components/ui/States'
 import { SegmentedControl } from '../components/ui/Tabs'
@@ -70,11 +70,11 @@ export function PaymentsPage() {
         <Card><EmptyState icon={MdOutlinePayments} title="No payments yet" description="When clients pay by M-Pesa, bank or card, payments appear here and settle their invoices automatically." /></Card>
       ) : (
         <>
-          <section aria-label="Payment totals" className="mb-5 grid gap-4 sm:grid-cols-3">
-            <StatTile label="Received (KES)" value={formatMoney(receivedTotal, 'KES', { compact: true })} icon={MdOutlinePayments} footnote={`${received.length} payments`} />
-            <StatTile label="Through M-Pesa" value={`${Math.round((mpesaTotal / Math.max(receivedTotal, 1)) * 100)}%`} icon={MdOutlinePhoneIphone} footnote={formatMoney(mpesaTotal, 'KES', { compact: true })} />
-            <StatTile label="Needs attention" value={`${all.filter((p) => p.status !== 'SUCCEEDED').length}`} icon={MdOutlineLink} emphasis="danger" footnote="pending or failed" />
-          </section>
+          <Figures className="mb-6">
+            <Figure label="Received" value={formatMoney(receivedTotal, 'KES', { compact: true })} detail={`${received.length} payments`} />
+            <Figure label="Through M-Pesa" value={`${Math.round((mpesaTotal / Math.max(receivedTotal, 1)) * 100)}%`} detail={formatMoney(mpesaTotal, 'KES', { compact: true })} />
+            <Figure label="Pending or failed" value={`${all.filter((p) => p.status !== 'SUCCEEDED').length}`} detail="worth a follow-up" />
+          </Figures>
 
           <div className="grid gap-5 lg:grid-cols-12">
             <Card className="lg:col-span-8">
@@ -93,7 +93,7 @@ export function PaymentsPage() {
                         return (
                           <li key={payment.id}>
                             <Link to={`/invoices/${payment.invoiceId}`} className="flex items-center gap-4 px-5 py-3 transition-colors duration-fast hover:bg-ink-50 focus-ring sm:px-6">
-                              <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', payment.status === 'FAILED' ? 'bg-danger-soft text-danger' : payment.status === 'PENDING' ? 'bg-brand-50 text-brand-600' : 'bg-success-soft text-success')}>
+                              <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-full', payment.status === 'FAILED' ? 'bg-danger-soft text-danger' : 'bg-ink-100 text-ink-600')}>
                                 <Icon icon={method.icon} size="md" />
                               </span>
                               <span className="min-w-0 flex-1">
@@ -114,7 +114,7 @@ export function PaymentsPage() {
               </div>
             </Card>
 
-            <div className="space-y-5 lg:col-span-4">
+            <div className="min-w-0 space-y-5 lg:col-span-4">
               <Card>
                 <CardHeader title="By method" description="Received payments in KES" />
                 <CardBody>

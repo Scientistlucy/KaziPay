@@ -105,7 +105,7 @@ export function MpesaRequestModal({ open, onOpenChange, amount, invoiceNumber, d
 
       {stage === 'success' && (
         <div className="flex flex-col items-center py-2 text-center" role="status">
-          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success-soft text-success animate-content-in"><Icon icon={MdCheckCircle} size="lg" /></span>
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white animate-content-in"><Icon icon={MdCheckCircle} size="lg" /></span>
           <p className="mt-4 text-subheading text-ink-900">Paid by +254 {phone.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')}</p>
           <p className="mt-1 text-small text-ink-500">M-Pesa receipt <span className="font-semibold text-ink-800">SKL7Q2M4XD</span> · the invoice has been settled.</p>
         </div>
