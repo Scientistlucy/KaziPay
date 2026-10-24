@@ -70,7 +70,7 @@ Tokens are defined once as CSS variables in `frontend/src/styles.css` and expose
 
 Danger buttons use `#C8321F` with hover `#A82918`.
 
-**Charts** use a blue sequence: brand-500 (primary series), brand-300 (comparison), brand-200 (tertiary). Other series use ink-300. Feedback colors appear in charts only when the data *means* that state (overdue amounts in red).
+**Charts.** A single series uses brand-600 (area fills are brand-600 at about 10% opacity). Two series use **chart-1 brand-700 `#1A41BA`** and **chart-2 brand-400 `#5A8CF7`**. This pair passed the palette validator (lightness band, chroma floor, colorblind separation ΔE ≥ 20, contrast ≥ 3:1 on white). Neutral gray failed it as a series color, so gray is never used for a series. Ordered categories with one measure (A/R aging buckets) use one color. Feedback colors appear in charts only when the data *means* that state.
 
 ### 2.2 Typography
 
