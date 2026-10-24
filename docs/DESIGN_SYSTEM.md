@@ -233,7 +233,7 @@ Each page has a single obvious primary action and a layout chosen for its conten
 |------|--------|----------------|
 | Sign in / Register | Split: brand panel (value statement, product glimpse) plus form card | Sign in / Create workspace |
 | Onboarding | Centered stepper (business, branding, tax, first client) | Continue |
-| Dashboard | Greeting plus KPI strip (4 stat tiles), revenue chart (8 cols) with A/R aging (4 cols), then needs-attention list, recent activity timeline, and active projects | New invoice |
+| Dashboard | Greeting plus KPI strip (4 stat tiles), revenue chart (8 cols) with A/R aging (4 cols), then needs-attention list, recent activity timeline, and active projects | New client (New invoice once the invoice editor exists) |
 | Clients | Toolbar (search, status filter chips, import/export), then DataTable with pagination | New client |
 | Client detail | Header (avatar, name, status, actions), stats row, then 8/4: tabs (Overview with activity timeline, Invoices, Projects, Contacts) and a side panel (billing details, primary contact, portal access) | New invoice for client |
 | Projects | Card grid (progress ring, budget bar, due date, team avatars) with a status segmented control | New project |

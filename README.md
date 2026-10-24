@@ -6,6 +6,19 @@ KaziPay is a modular monolith for consultants and small agencies to manage clien
 
 > Do the work. Get paid.
 
+![KaziPay dashboard](docs/screenshots/dashboard.png)
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/clients.png" alt="Clients list with search, filters and pagination" /></td>
+    <td><img src="docs/screenshots/project-board.png" alt="Project Kanban board" /></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/invoice-detail.png" alt="Invoice document view with M-Pesa payment request" /></td>
+    <td><img src="docs/screenshots/time.png" alt="Weekly timesheet with timer and hours chart" /></td>
+  </tr>
+</table>
+
 ## Project Status
 
 The project is being built in the order defined by the specifications:
@@ -15,8 +28,10 @@ The project is being built in the order defined by the specifications:
 - Step 3: Platform plumbing - complete
 - Step 4: Identity - complete
 - Step 5: Tenant settings - complete
-- Step 6: Clients - complete (backend; the frontend screen comes with the frontend pass)
+- Step 6: Clients - complete
 - Step 7: Projects, members, milestones - next
+
+**Frontend:** the full staff app UI is built on the design system in [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md). It covers sign-in, registration, dashboard, clients, projects with a Kanban board, the timesheet, invoices with the M-Pesa payment flow, payments and settings. Screens read typed sample data through TanStack Query hooks (`src/lib/queries.ts` → `src/mocks`). Each backend step replaces its mock fetchers with real API calls without touching components.
 
 The database is delivered through versioned Flyway migrations alongside each build step. The current migrations (V1–V4, V9, V11, V12) cover the foundation, tenancy and platform plumbing, identity, clients, and tenant settings. A shared development database runs on Neon. See [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md).
 
@@ -43,6 +58,10 @@ The database is delivered through versioned Flyway migrations alongside each bui
 - React Router
 - TanStack Query
 - Axios
+- Radix UI primitives, cmdk command palette
+- React Hook Form and Zod
+- Recharts
+- Material icons (react-icons) and Plus Jakarta Sans
 - Vitest and Testing Library
 
 ### Local infrastructure
@@ -73,8 +92,14 @@ The database is delivered through versioned Flyway migrations alongside each bui
 |-- frontend/
 |   |-- package.json
 |   |-- src/
-|   |   |-- lib/              # API client
-|   |   |-- test/             # test setup
+|   |   |-- components/ui/    # design-system components (Button, Field, DataTable, Modal...)
+|   |   |-- components/layout/# app shell, sidebar, command palette, timer
+|   |   |-- components/charts/# revenue, aging and hours charts
+|   |   |-- features/         # feature-specific forms and widgets
+|   |   |-- pages/            # one lazily loaded module per route
+|   |   |-- lib/              # query hooks, API client, formatting
+|   |   |-- mocks/            # typed sample data until API integration
+|   |   |-- test/             # test setup and render helper
 |   |   `-- App.tsx
 |   `-- vite.config.ts
 |-- infra/
@@ -87,6 +112,7 @@ The database is delivered through versioned Flyway migrations alongside each bui
 |   |-- ERROR_LOG.md
 |   |-- DECISIONS.md
 |   |-- DATABASE_SETUP.md
+|   |-- DESIGN_SYSTEM.md      # frontend tokens, components and page patterns
 |   `-- ...
 |-- .github/workflows/ci.yml  # backend verify + frontend build/test
 |-- .cursorrules
