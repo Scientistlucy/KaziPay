@@ -5,8 +5,8 @@ import { StatusBadge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { Icon } from '../components/ui/Icon'
-import { PageContainer } from '../components/ui/Page'
-import { ProgressBar, ProgressRing } from '../components/ui/Progress'
+import { Figure, Figures, PageContainer } from '../components/ui/Page'
+import { ProgressBar } from '../components/ui/Progress'
 import { LoadingRegion, Skeleton } from '../components/ui/Skeleton'
 import { ErrorState } from '../components/ui/States'
 import { Tab, TabList, TabPanel, Tabs } from '../components/ui/Tabs'
@@ -46,7 +46,7 @@ function ProjectDetail({ project }: { project: Project }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-title">{project.name}</h1>
-            <StatusBadge status={project.status} />
+            {project.status !== 'ACTIVE' && <StatusBadge status={project.status} />}
           </div>
           <p className="mt-1 text-body text-ink-500">
             <Link to={`/clients/${project.clientId}`} className="rounded-sm font-semibold text-brand-600 hover:text-brand-700 focus-ring">{project.clientName}</Link>
@@ -59,27 +59,12 @@ function ProjectDetail({ project }: { project: Project }) {
         </div>
       </header>
 
-      <section aria-label="Project health" className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="flex items-center gap-4 p-5">
-          <ProgressRing value={project.progress} size={52} label={`${project.progress}% complete`} />
-          <div><p className="text-small text-ink-500">Progress</p><p className="text-subheading text-ink-900">{project.openTasks} tasks open</p></div>
-        </Card>
-        <Card className="p-5">
-          <p className="text-small text-ink-500">Budget</p>
-          <p className="tnum mt-0.5 text-subheading text-ink-900">{formatMoney(project.spent, 'KES', { compact: true })} <span className="font-normal text-ink-500">of {formatMoney(project.budget, 'KES', { compact: true })}</span></p>
-          <ProgressBar className="mt-2.5" value={budgetUsed} label={`${budgetUsed}% of budget used`} tone={budgetUsed >= 90 ? 'danger' : budgetUsed >= 75 ? 'warning' : 'brand'} showValue />
-        </Card>
-        <Card className="p-5">
-          <p className="text-small text-ink-500">Time logged</p>
-          <p className="tnum mt-0.5 text-subheading text-ink-900">{project.hoursLogged} hours</p>
-          <p className="mt-1 text-caption text-ink-500">Since {formatDate(project.startDate)}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-small text-ink-500">Deadline</p>
-          <p className="mt-0.5 text-subheading text-ink-900">{formatDate(project.dueDate)}</p>
-          <p className={cn('mt-1 text-caption', project.status === 'AT_RISK' ? 'font-semibold text-danger' : 'text-ink-500')}>{project.status === 'COMPLETED' ? 'Delivered' : dueLabel(project.dueDate)}</p>
-        </Card>
-      </section>
+      <Figures className="mb-8">
+        <Figure label="Progress" value={`${project.progress}%`} detail={`${project.openTasks} tasks open`} />
+        <Figure label="Budget used" value={`${budgetUsed}%`} detail={`${formatMoney(project.spent, 'KES', { compact: true })} of ${formatMoney(project.budget, 'KES', { compact: true })}`} alarm={budgetUsed >= 90 && project.status !== 'COMPLETED'} />
+        <Figure label="Time logged" value={`${project.hoursLogged}h`} detail={`Since ${formatDate(project.startDate, 'short')}`} />
+        <Figure label="Deadline" value={formatDate(project.dueDate, 'short')} detail={project.status === 'COMPLETED' ? 'Delivered' : dueLabel(project.dueDate)} alarm={project.status === 'AT_RISK'} />
+      </Figures>
 
       <Tabs defaultValue="board">
         <TabList className="mb-5">

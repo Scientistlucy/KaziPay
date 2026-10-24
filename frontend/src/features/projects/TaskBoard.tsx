@@ -1,7 +1,7 @@
 import { useState, type DragEvent } from 'react'
 import type { IconType } from 'react-icons'
 import {
-  MdAdd, MdChatBubbleOutline, MdChecklist, MdDragIndicator, MdKeyboardDoubleArrowUp, MdKeyboardArrowUp, MdMoreHoriz, MdOutlineCalendarToday,
+  MdAdd, MdChatBubbleOutline, MdChecklist, MdDragIndicator, MdKeyboardArrowDown, MdKeyboardDoubleArrowUp, MdKeyboardArrowUp, MdMoreHoriz, MdOutlineCalendarToday,
   MdOutlineVisibility, MdRemove,
 } from 'react-icons/md'
 import { Avatar } from '../../components/ui/Avatar'
@@ -17,18 +17,20 @@ import { daysUntil } from '../../lib/invoice'
 import { useMoveTask, useTasks } from '../../lib/queries'
 import type { Priority, Task, TaskStatus } from '../../types'
 
+// Column dots darken as work moves right: one blue ramp, read as progress.
 const columns: { status: TaskStatus; label: string; accent: string }[] = [
-  { status: 'TODO', label: 'To do', accent: 'bg-ink-400' },
-  { status: 'IN_PROGRESS', label: 'In progress', accent: 'bg-brand-600' },
-  { status: 'REVIEW', label: 'In review', accent: 'bg-[#D98A1C]' },
-  { status: 'DONE', label: 'Done', accent: 'bg-success' },
+  { status: 'TODO', label: 'To do', accent: 'bg-ink-300' },
+  { status: 'IN_PROGRESS', label: 'In progress', accent: 'bg-brand-300' },
+  { status: 'REVIEW', label: 'In review', accent: 'bg-brand-500' },
+  { status: 'DONE', label: 'Done', accent: 'bg-brand-700' },
 ]
 
+// Priority is an arrow and a word; only Urgent earns the alarm color.
 const priorities: Record<Priority, { label: string; icon: IconType; className: string }> = {
-  URGENT: { label: 'Urgent', icon: MdKeyboardDoubleArrowUp, className: 'text-danger bg-danger-soft' },
-  HIGH: { label: 'High', icon: MdKeyboardArrowUp, className: 'text-warning bg-warning-soft' },
-  MEDIUM: { label: 'Medium', icon: MdRemove, className: 'text-brand-700 bg-brand-50' },
-  LOW: { label: 'Low', icon: MdRemove, className: 'text-ink-600 bg-ink-100' },
+  URGENT: { label: 'Urgent', icon: MdKeyboardDoubleArrowUp, className: 'text-danger' },
+  HIGH: { label: 'High', icon: MdKeyboardArrowUp, className: 'text-ink-800' },
+  MEDIUM: { label: 'Medium', icon: MdRemove, className: 'text-ink-500' },
+  LOW: { label: 'Low', icon: MdKeyboardArrowDown, className: 'text-ink-400' },
 }
 
 export function TaskBoard({ projectId }: { projectId: string }) {
@@ -139,21 +141,19 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd, onMove }: TaskCardPr
           ))}
         </Menu>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <span className={cn('inline-flex h-[22px] items-center gap-1 rounded-sm px-1.5 text-caption font-semibold', priority.className)}>
-          <Icon icon={priority.icon} size="xs" />{priority.label}
-        </span>
-        {task.dueDate && (
-          <span className={cn('inline-flex h-[22px] items-center gap-1 rounded-sm px-1.5 text-caption font-medium', late ? 'bg-danger-soft text-danger' : soon ? 'bg-warning-soft text-warning' : 'text-ink-500')}>
-            <Icon icon={MdOutlineCalendarToday} size="xs" />{late ? 'Late · ' : ''}{formatDate(task.dueDate, 'short')}
-          </span>
-        )}
-      </div>
-      <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-3 text-caption text-ink-500">
-          {task.comments > 0 && <span className="inline-flex items-center gap-1" aria-label={`${task.comments} comments`}><Icon icon={MdChatBubbleOutline} size="xs" />{task.comments}</span>}
-          {task.checklist && <span className={cn('tnum inline-flex items-center gap-1', task.checklist.done === task.checklist.total && 'text-success')} aria-label={`Checklist ${task.checklist.done} of ${task.checklist.total}`}><Icon icon={MdChecklist} size="xs" />{task.checklist.done}/{task.checklist.total}</span>}
-          {task.clientVisible && <Tooltip content="Visible to the client"><span className="inline-flex" aria-label="Visible to the client"><Icon icon={MdOutlineVisibility} size="xs" /></span></Tooltip>}
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-caption">
+          {task.status !== 'DONE' && (
+            <span className={cn('inline-flex items-center gap-0.5 font-semibold', priority.className)}><Icon icon={priority.icon} size="xs" />{priority.label}</span>
+          )}
+          {task.dueDate && task.status !== 'DONE' && (
+            <span className={cn('inline-flex items-center gap-1', late ? 'font-semibold text-danger' : soon ? 'font-semibold text-ink-800' : 'text-ink-500')}>
+              <Icon icon={MdOutlineCalendarToday} size="xs" />{late ? 'Late · ' : ''}{formatDate(task.dueDate, 'short')}
+            </span>
+          )}
+          {task.comments > 0 && <span className="inline-flex items-center gap-1 text-ink-500" aria-label={`${task.comments} comments`}><Icon icon={MdChatBubbleOutline} size="xs" />{task.comments}</span>}
+          {task.checklist && <span className={cn('tnum inline-flex items-center gap-1', task.checklist.done === task.checklist.total ? 'text-brand-700' : 'text-ink-500')} aria-label={`Checklist ${task.checklist.done} of ${task.checklist.total}`}><Icon icon={MdChecklist} size="xs" />{task.checklist.done}/{task.checklist.total}</span>}
+          {task.clientVisible && <Tooltip content="Visible to the client"><span className="inline-flex text-ink-500" aria-label="Visible to the client"><Icon icon={MdOutlineVisibility} size="xs" /></span></Tooltip>}
         </div>
         <Avatar name={task.assignee} size="xs" />
       </div>
