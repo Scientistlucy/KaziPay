@@ -80,7 +80,7 @@ export function TimePage() {
       />
 
       <div className="grid gap-5 xl:grid-cols-12">
-        <div className="space-y-5 xl:col-span-8">
+        <div className="min-w-0 space-y-5 xl:col-span-8">
           <Card>
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-200 px-5 py-4 sm:px-6">
               <div className="flex items-center gap-2">
@@ -92,7 +92,7 @@ export function TimePage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {submitted && week === 0 ? <Badge tone="warning" dot>Awaiting approval</Badge> : <Badge dot>Draft</Badge>}
+                {submitted && week === 0 ? <Badge tone="partial">Awaiting approval</Badge> : <Badge>Draft</Badge>}
                 <p className="tnum text-small text-ink-600"><span className="text-heading text-ink-900">{formatHours(total)}</span> total</p>
               </div>
             </div>
@@ -147,7 +147,7 @@ export function TimePage() {
                       <td className="h-12 pl-5 sm:pl-6">
                         <Button variant="tertiary" size="sm" leadingIcon={MdAdd} disabled={submitted || week !== 0} onClick={() => toast({ tone: 'info', title: 'Adding rows arrives with Step 8', description: 'Pick any project you’re a member of.' })}>Add project</Button>
                       </td>
-                      {dayTotals.map((value, day) => <td key={day} className={cn('tnum whitespace-nowrap text-center text-small font-semibold', value > 8 ? 'text-warning' : 'text-ink-700')}>{value ? formatHours(value) : '–'}</td>)}
+                      {dayTotals.map((value, day) => <td key={day} className={cn('tnum whitespace-nowrap text-center text-small font-semibold', value > 8 ? 'text-ink-900 underline decoration-brand-400 decoration-2 underline-offset-4' : 'text-ink-700')} title={value > 8 ? 'More than 8 hours' : undefined}>{value ? formatHours(value) : '–'}</td>)}
                       <td className="tnum whitespace-nowrap pr-5 text-right text-body font-bold text-ink-900 sm:pr-6">{formatHours(total)}</td>
                     </tr>
                   </tfoot>
@@ -158,7 +158,7 @@ export function TimePage() {
 
           {dirty && (
             <div role="status" className="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-ink-200 bg-white px-4 py-3 shadow-pop animate-toast-in">
-              <p className="flex items-center gap-2 text-small font-semibold text-ink-800"><span className="h-2 w-2 rounded-full bg-[#D98A1C]" aria-hidden />You have unsaved changes</p>
+              <p className="flex items-center gap-2 text-small font-semibold text-ink-800"><span className="h-2 w-2 rounded-full bg-brand-600" aria-hidden />You have unsaved changes</p>
               <div className="flex gap-2">
                 <Button variant="tertiary" size="sm" onClick={() => setRows(saved)} disabled={saving}>Discard</Button>
                 <Button size="sm" onClick={save} loading={saving}>Save timesheet</Button>
@@ -167,7 +167,7 @@ export function TimePage() {
           )}
         </div>
 
-        <div className="space-y-5 xl:col-span-4">
+        <div className="min-w-0 space-y-5 xl:col-span-4">
           <TimerCard />
           <Card>
             <CardHeader title="This week" description={`${total ? Math.round((billable / total) * 100) : 0}% billable · target 32h`} />
@@ -199,10 +199,10 @@ function TimerCard() {
 
   return (
     <Card className={cn('overflow-hidden', running && 'border-brand-200')}>
-      <div className={cn('px-5 pb-5 pt-5 sm:px-6', running ? 'bg-gradient-to-b from-brand-50 to-white' : '')}>
+      <div className="px-5 pb-5 pt-5 sm:px-6">
         <div className="flex items-center justify-between">
           <p className="text-subheading text-ink-900">Timer</p>
-          {running && <Badge tone="brand" dot>Running</Badge>}
+          {running && <Badge tone="brand">Running</Badge>}
         </div>
         <p className={cn('tnum mt-3 text-[40px] font-bold leading-none tracking-[-0.02em]', running ? 'text-brand-800' : 'text-ink-300')} aria-live="off">{formatClock(elapsed)}</p>
         <p className="mt-2 truncate text-small text-ink-500">{running ? `${running.projectName} · ${running.description}` : 'Pick a project and start tracking.'}</p>

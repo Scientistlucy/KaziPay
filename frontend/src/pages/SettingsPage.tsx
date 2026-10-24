@@ -169,7 +169,7 @@ function WorkspaceSection({ onDirtyChange }: { onDirtyChange: (dirty: boolean) =
         isDirty ? 'sticky bottom-4 z-20 border-ink-200 bg-white shadow-pop' : 'border-ink-200 bg-white/60',
       )}>
         <p className="flex items-center gap-2 text-small font-semibold text-ink-800" aria-live="polite">
-          {isDirty ? <><span className="h-2 w-2 rounded-full bg-[#D98A1C]" aria-hidden />You have unsaved changes</> : <span className="font-normal text-ink-500">All changes saved</span>}
+          {isDirty ? <><span className="h-2 w-2 rounded-full bg-brand-600" aria-hidden />You have unsaved changes</> : <span className="font-normal text-ink-500">All changes saved</span>}
         </p>
         <div className="flex gap-2">
           <Button variant="tertiary" disabled={!isDirty || update.isPending} onClick={() => workspace.data && reset(pickWorkspace(workspace.data))}>Discard</Button>
@@ -377,7 +377,7 @@ function BillingSection() {
       <Card>
         <CardHeader title="Payment method" description="Your subscription renews by M-Pesa." divider />
         <CardBody className="flex items-center justify-between gap-4 py-5">
-          <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-success-soft text-success"><Icon icon={MdOutlineCreditCard} size="md" /></span><div><p className="font-semibold text-ink-900">M-Pesa · +254 712 ••• 678</p><p className="text-small text-ink-500">Prompt sent 3 days before renewal</p></div></div>
+          <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-ink-100 text-ink-600"><Icon icon={MdOutlineCreditCard} size="md" /></span><div><p className="font-semibold text-ink-900">M-Pesa · +254 712 ••• 678</p><p className="text-small text-ink-500">Prompt sent 3 days before renewal</p></div></div>
           <Button variant="secondary" size="sm">Update</Button>
         </CardBody>
       </Card>
@@ -390,7 +390,7 @@ function Usage({ label, used, limit, unit = '' }: { label: string; used: number;
     <div>
       <div className="flex items-baseline justify-between"><p className="text-small font-medium text-ink-600">{label}</p><p className="tnum text-small text-ink-500"><span className="font-semibold text-ink-900">{used}{unit && ` ${unit}`}</span>{limit ? ` of ${limit}${unit && ` ${unit}`}` : ' · unlimited'}</p></div>
       {limit
-        ? <ProgressBar className="mt-2" value={used} max={limit} label={`${label} usage`} tone={used / limit > 0.85 ? 'warning' : 'brand'} />
+        ? <ProgressBar className="mt-2" value={used} max={limit} label={`${label} usage`} tone={used / limit > 0.95 ? 'danger' : 'brand'} />
         : <p className="mt-2 text-caption text-ink-500">No limit on your plan</p>}
     </div>
   )
