@@ -64,7 +64,7 @@ export function ImportClientsModal({ open, onOpenChange }: Props) {
           <span className="flex h-9 w-9 items-center justify-center rounded-md bg-brand-50 text-brand-600"><Icon icon={MdOutlineDescription} size="md" /></span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-small font-semibold text-ink-900">{file.name}</p>
-            <p className="flex items-center gap-1 text-caption text-success"><Icon icon={MdCheckCircleOutline} size="xs" />Ready to import · {(file.size / 1024).toFixed(1)} KB</p>
+            <p className="flex items-center gap-1 text-caption text-brand-700"><Icon icon={MdCheckCircleOutline} size="xs" />Ready to import · {(file.size / 1024).toFixed(1)} KB</p>
           </div>
           <button type="button" aria-label="Remove file" onClick={() => setFile(null)} className="rounded-md p-1.5 text-ink-400 hover:bg-ink-100 hover:text-ink-700 focus-ring"><Icon icon={MdClose} size="sm" /></button>
         </div>

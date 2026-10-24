@@ -17,6 +17,7 @@ import { ProgressBar } from '../components/ui/Progress'
 import { LoadingRegion, Skeleton } from '../components/ui/Skeleton'
 import { EmptyState, ErrorState } from '../components/ui/States'
 import { Tab, TabList, TabPanel, Tabs } from '../components/ui/Tabs'
+import { PaymentRail } from '../components/ui/Stepper'
 import { useToast } from '../components/ui/Toast'
 import { Tooltip } from '../components/ui/Tooltip'
 import { ClientFormModal } from '../features/clients/ClientFormModal'
@@ -102,8 +103,8 @@ function ClientDetail({ client }: { client: Client }) {
 
             <TabPanel value="overview" className="space-y-5">
               {client.notes && (
-                <div className="rounded-lg border border-warning-line bg-warning-soft px-4 py-3">
-                  <p className="text-overline uppercase text-warning">Internal note</p>
+                <div className="rounded-lg border-l-[3px] border-brand-600 bg-white px-4 py-3 shadow-card">
+                  <p className="text-overline uppercase text-ink-500">Internal note</p>
                   <p className="mt-1 text-body text-ink-800">{client.notes}</p>
                 </div>
               )}
@@ -124,7 +125,7 @@ function ClientDetail({ client }: { client: Client }) {
                             <span className="block font-semibold text-ink-900">{invoice.number}</span>
                             <span className="block truncate text-small text-ink-500">{invoice.projectName ?? 'General services'} · Issued {formatDate(invoice.issueDate)}</span>
                           </span>
-                          <StatusBadge status={invoice.status} className="hidden sm:inline-flex" />
+                          <PaymentRail status={invoice.status} className="hidden w-40 sm:inline-flex" />
                           <span className="tnum w-32 text-right font-semibold text-ink-900">{formatMoney(invoiceTotals(invoice).total, invoice.currency)}</span>
                         </Link>
                       </li>
@@ -177,7 +178,7 @@ function ClientDetail({ client }: { client: Client }) {
           </Tabs>
         </div>
 
-        <aside className="space-y-5 lg:col-span-4">
+        <aside className="min-w-0 space-y-5 lg:col-span-4">
           <Card>
             <CardHeader title="Billing details" divider />
             <CardBody>
@@ -199,7 +200,7 @@ function ClientDetail({ client }: { client: Client }) {
                 <p className="mt-0.5 text-small text-ink-500">
                   {client.portalAccess ? 'Contacts can view projects, approve deliverables and pay invoices online.' : 'Not invited yet. Invite contacts so they can pay invoices online.'}
                 </p>
-                <div className="mt-2">{client.portalAccess ? <Badge tone="success" dot>Access active</Badge> : <Badge dot>No access</Badge>}</div>
+                <div className="mt-2">{client.portalAccess ? <Badge tone="done">Access active</Badge> : <Badge>No access</Badge>}</div>
               </div>
             </div>
           </Card>
@@ -250,7 +251,7 @@ function ContactLink({ href, icon, label }: { href: string; icon: typeof MdOutli
   )
 }
 
-type TimelineEvent = { id: string; text: string; detail: string; at: string; tone: 'brand' | 'success' | 'danger' }
+type TimelineEvent = { id: string; text: string; detail: string; at: string; tone: 'brand' | 'done' | 'danger' }
 
 // Derived from the client's invoices until GET /clients/{id}/activity exists.
 function ClientTimeline({ invoices, client }: { invoices: Invoice[] | undefined; client: Client }) {
@@ -258,13 +259,14 @@ function ClientTimeline({ invoices, client }: { invoices: Invoice[] | undefined;
   const events: TimelineEvent[] = invoices.flatMap((invoice) => {
     const { total } = invoiceTotals(invoice)
     const list: TimelineEvent[] = [{ id: `${invoice.id}-issued`, text: `${invoice.number} issued`, detail: formatMoney(total, invoice.currency), at: invoice.issueDate, tone: 'brand' }]
-    if (invoice.amountPaid > 0) list.push({ id: `${invoice.id}-paid`, text: `Payment received for ${invoice.number}`, detail: formatMoney(invoice.amountPaid, invoice.currency), at: new Date(new Date(invoice.issueDate).getTime() + 5 * 86_400_000).toISOString(), tone: 'success' })
+    if (invoice.amountPaid > 0) list.push({ id: `${invoice.id}-paid`, text: `Payment received for ${invoice.number}`, detail: formatMoney(invoice.amountPaid, invoice.currency), at: new Date(new Date(invoice.issueDate).getTime() + 5 * 86_400_000).toISOString(), tone: 'done' })
     if (invoice.status === 'OVERDUE') list.push({ id: `${invoice.id}-overdue`, text: `${invoice.number} became overdue`, detail: 'Reminder scheduled', at: invoice.dueDate, tone: 'danger' })
     return list
   })
   events.push({ id: 'created', text: `${client.name} added as a client`, detail: `by ${currentUser.name}`, at: client.createdAt, tone: 'brand' })
   events.sort((a, b) => b.at.localeCompare(a.at))
-  const dot = { brand: 'bg-brand-600', success: 'bg-success', danger: 'bg-danger' }
+  // Issued events are hollow, payments are solid blue, overdue is red.
+  const dot = { brand: 'border-2 border-brand-600 bg-white', done: 'bg-brand-600', danger: 'bg-danger' }
 
   return (
     <Card>

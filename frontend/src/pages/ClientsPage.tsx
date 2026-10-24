@@ -10,7 +10,6 @@ import { DataTable, type Column } from '../components/ui/DataTable'
 import { ConfirmDialog } from '../components/ui/Modal'
 import { Menu, MenuItem, MenuSeparator } from '../components/ui/Menu'
 import { PageContainer, PageHeader, SearchInput } from '../components/ui/Page'
-import { Skeleton } from '../components/ui/Skeleton'
 import { EmptyState, ErrorState, NoResults } from '../components/ui/States'
 import { SegmentedControl } from '../components/ui/Tabs'
 import { useToast } from '../components/ui/Toast'
@@ -78,7 +77,7 @@ export function ClientsPage() {
         <div className="flex min-w-[200px] items-center gap-3">
           <Avatar name={c.name} size="sm" square />
           <div className="min-w-0">
-            <p className="truncate font-semibold text-ink-900">{c.name}</p>
+            <p className="flex items-center gap-2 font-semibold text-ink-900"><span className="truncate">{c.name}</span>{c.status === 'ARCHIVED' && <StatusBadge status="ARCHIVED" />}</p>
             <p className="truncate text-small text-ink-500">{c.industry}</p>
           </div>
         </div>
@@ -89,17 +88,18 @@ export function ClientsPage() {
       id: 'outstanding', header: 'Outstanding', align: 'right', sortValue: (c) => c.outstanding,
       cell: (c) => <span className={cn('font-semibold', c.outstanding > 0 ? 'text-ink-900' : 'text-ink-400')}>{c.outstanding > 0 ? formatMoney(c.outstanding, c.defaultCurrency) : '—'}</span>,
     },
-    { id: 'billed', header: 'Total billed', align: 'right', hideable: true, sortValue: (c) => c.totalBilled, cell: (c) => <span className="text-ink-700">{formatMoney(c.totalBilled, c.defaultCurrency, { compact: true })}</span> },
+    { id: 'billed', header: 'Total billed', align: 'right', hideable: true, defaultHidden: true, sortValue: (c) => c.totalBilled, cell: (c) => <span className="text-ink-700">{formatMoney(c.totalBilled, c.defaultCurrency, { compact: true })}</span> },
     { id: 'projects', header: 'Projects', align: 'right', hideable: true, defaultHidden: true, sortValue: (c) => c.activeProjects, cell: (c) => <span className="text-ink-700">{c.activeProjects}</span> },
     { id: 'activity', header: 'Last activity', hideable: true, sortValue: (c) => c.lastActivityAt, cell: (c) => <span className="whitespace-nowrap text-small text-ink-500">{formatRelative(c.lastActivityAt)}</span> },
-    { id: 'status', header: 'Status', cell: (c) => <StatusBadge status={c.status} /> },
   ]
 
   return (
     <PageContainer>
       <PageHeader
         title="Clients"
-        description="Everyone you work for, what they owe, and how to reach them."
+        description={clients.data
+          ? <><span className="tnum font-semibold text-ink-800">{counts.ACTIVE}</span> active clients owe you <span className="tnum font-semibold text-ink-800">{formatMoney(totals.outstanding, 'KES', { compact: true })}</span></>
+          : 'Everyone you work for and what they owe.'}
         actions={
           <>
             <Menu trigger={<Button variant="secondary" leadingIcon={MdOutlineFileUpload}>Import or export</Button>}>
@@ -110,16 +110,6 @@ export function ClientsPage() {
           </>
         }
       />
-
-      <section aria-label="Client summary" className="mb-5 grid grid-cols-1 divide-y divide-ink-200 rounded-lg border border-ink-200 bg-white shadow-card sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-        {clients.isPending ? Array.from({ length: 3 }, (_, i) => <div key={i} className="space-y-2 p-5"><Skeleton className="h-3 w-1/3" /><Skeleton className="h-6 w-1/2" /></div>) : (
-          <>
-            <SummaryFigure label="Active clients" value={counts.ACTIVE.toString()} detail={`${counts.ARCHIVED} archived`} />
-            <SummaryFigure label="Owed to you" value={formatMoney(totals.outstanding, 'KES', { compact: true })} detail={`across ${totals.owing} clients`} />
-            <SummaryFigure label="Plan usage" value="Unlimited" detail="Professional plan" />
-          </>
-        )}
-      </section>
 
       {clients.isError ? (
         <div className="rounded-lg border border-ink-200 bg-white shadow-card"><ErrorState onRetry={() => clients.refetch()} retrying={clients.isFetching} /></div>
@@ -166,7 +156,7 @@ export function ClientsPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <p className="truncate font-semibold text-ink-900">{c.name}</p>
-                  <StatusBadge status={c.status} />
+                  {c.status === 'ARCHIVED' && <StatusBadge status={c.status} />}
                 </div>
                 <p className="truncate text-small text-ink-500">{c.industry} · {formatRelative(c.lastActivityAt)}</p>
                 <p className="tnum mt-1.5 text-small font-semibold text-ink-900">{c.outstanding > 0 ? `${formatMoney(c.outstanding, c.defaultCurrency)} outstanding` : 'Nothing outstanding'}</p>
@@ -198,14 +188,5 @@ export function ClientsPage() {
         onConfirm={confirmArchive}
       />
     </PageContainer>
-  )
-}
-
-function SummaryFigure({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return (
-    <div className="p-5">
-      <p className="text-small font-medium text-ink-500">{label}</p>
-      <p className="mt-1 flex items-baseline gap-2"><span className="text-[22px] font-bold tracking-[-0.02em] text-ink-900">{value}</span><span className="text-small text-ink-500">{detail}</span></p>
-    </div>
   )
 }
