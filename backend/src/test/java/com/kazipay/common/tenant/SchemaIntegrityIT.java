@@ -13,7 +13,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
-class SchemaIntegrityTest {
+class SchemaIntegrityIT {
     @Container
     static final PostgreSQLContainer<?> postgres = PostgresTestContainer.INSTANCE.withInitScript("tenant-test-init.sql");
 
