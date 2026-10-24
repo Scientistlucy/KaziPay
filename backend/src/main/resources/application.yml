@@ -1,6 +1,8 @@
 spring:
   application:
     name: kazipay
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/kazipay}
     username: ${DATABASE_USER:kazipay_app}
@@ -13,6 +15,9 @@ spring:
       hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: true
+    url: ${FLYWAY_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/kazipay}}
+    user: ${FLYWAY_USER:kazipay_owner}
+    password: ${FLYWAY_PASSWORD:kazipay_owner}
     out-of-order: true
     locations: classpath:db/migration
   jackson:
