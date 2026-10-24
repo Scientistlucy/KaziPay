@@ -12,8 +12,7 @@ export default {
           0: '#FFFFFF', 25: '#FAFBFC', 50: '#F5F7FA', 100: '#EDF0F5', 200: '#E1E6EE', 300: '#C9D1DD',
           400: '#98A3B5', 500: '#66728A', 600: '#4A556B', 700: '#343E52', 800: '#202939', 900: '#121826',
         },
-        success: { DEFAULT: '#0F7B53', soft: '#E7F6EF', line: '#B4E3CD' },
-        warning: { DEFAULT: '#A15C07', soft: '#FEF5E6', line: '#F8D9A0' },
+        // One blue plus one alarm color (docs/DESIGN_SYSTEM.md 1.1): no success or warning hues.
         danger: { DEFAULT: '#C8321F', soft: '#FDEEEC', line: '#F5C2BA', hover: '#A82918' },
         chart: { 1: '#1A41BA', 2: '#5A8CF7' },
       },

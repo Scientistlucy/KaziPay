@@ -1,20 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { IconType } from 'react-icons'
-import { MdCheckCircleOutline, MdClose, MdErrorOutline, MdInfoOutline, MdOutlineWarningAmber } from 'react-icons/md'
+import { MdCheckCircleOutline, MdClose, MdErrorOutline, MdInfoOutline } from 'react-icons/md'
 import { cn } from '../../lib/cn'
 import { Icon } from './Icon'
 
-type ToastTone = 'success' | 'danger' | 'warning' | 'info'
+type ToastTone = 'success' | 'danger' | 'info'
 type ToastInput = { tone?: ToastTone; title: string; description?: string; action?: { label: string; onClick: () => void } }
 type ToastItem = ToastInput & { id: number }
 
 const ToastContext = createContext<((toast: ToastInput) => void) | null>(null)
 
+// Success is blue like everything else that went right; only failures are red.
 const toneStyles: Record<ToastTone, { icon: IconType; accent: string; iconColor: string }> = {
-  success: { icon: MdCheckCircleOutline, accent: 'before:bg-success', iconColor: 'text-success' },
+  success: { icon: MdCheckCircleOutline, accent: 'before:bg-brand-600', iconColor: 'text-brand-600' },
   danger: { icon: MdErrorOutline, accent: 'before:bg-danger', iconColor: 'text-danger' },
-  warning: { icon: MdOutlineWarningAmber, accent: 'before:bg-[#D98A1C]', iconColor: 'text-warning' },
-  info: { icon: MdInfoOutline, accent: 'before:bg-brand-600', iconColor: 'text-brand-600' },
+  info: { icon: MdInfoOutline, accent: 'before:bg-ink-300', iconColor: 'text-ink-500' },
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {

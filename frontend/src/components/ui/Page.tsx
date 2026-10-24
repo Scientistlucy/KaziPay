@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import type { IconType } from 'react-icons'
 import { MdArrowDownward, MdArrowUpward, MdSearch } from 'react-icons/md'
 import { cn } from '../../lib/cn'
 import { Icon } from './Icon'
@@ -30,39 +29,40 @@ export function PageContainer({ children, className, width = 'wide' }: { childre
 
 type Delta = { value: number; label: string; positiveIsGood?: boolean }
 
+/** Change vs a named period. Direction is carried by the arrow and sign in ink, not by green or red. */
 export function DeltaIndicator({ delta }: { delta: Delta }) {
   const up = delta.value >= 0
-  const good = up === (delta.positiveIsGood ?? true)
   return (
-    <span className="inline-flex items-center gap-1 text-caption">
-      <span className={cn('inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-semibold', good ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger')}>
+    <span className="inline-flex items-center gap-1 text-caption text-ink-500">
+      <span className="tnum inline-flex items-center gap-0.5 font-semibold text-ink-800">
         <Icon icon={up ? MdArrowUpward : MdArrowDownward} size="xs" />
-        <span className="tnum">{up ? '+' : '−'}{Math.abs(delta.value).toFixed(1)}%</span>
+        {up ? '+' : '−'}{Math.abs(delta.value).toFixed(1)}%
       </span>
-      <span className="text-ink-500">{delta.label}</span>
+      {delta.label}
     </span>
   )
 }
 
-type StatTileProps = { label: string; value: ReactNode; icon?: IconType; delta?: Delta; footnote?: ReactNode; emphasis?: 'default' | 'danger' }
-
-/** KPI tile: sentence-case label, proportional-figure value, optional delta vs a named period. */
-export function StatTile({ label, value, icon, delta, footnote, emphasis = 'default' }: StatTileProps) {
+/** Ledger strip: related figures in one card separated by hairlines, instead of a row of identical tiles. */
+export function Figures({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-ink-200 bg-white p-5 shadow-card">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-small font-medium text-ink-500">{label}</p>
-        {icon && (
-          <span className={cn('flex h-8 w-8 items-center justify-center rounded-md', emphasis === 'danger' ? 'bg-danger-soft text-danger' : 'bg-brand-50 text-brand-600')}>
-            <Icon icon={icon} size="sm" />
-          </span>
-        )}
-      </div>
-      <p className="text-[26px] font-bold leading-8 tracking-[-0.02em] text-ink-900">{value}</p>
-      {(delta || footnote) && (
-        <div className="flex flex-wrap items-center gap-2">
+    <section className={cn('grid divide-y divide-ink-200 rounded-lg border border-ink-200 bg-white shadow-card sm:auto-cols-fr sm:grid-flow-col sm:divide-x sm:divide-y-0', className)}>
+      {children}
+    </section>
+  )
+}
+
+type FigureProps = { label: string; value: ReactNode; detail?: ReactNode; delta?: Delta; alarm?: boolean }
+
+export function Figure({ label, value, detail, delta, alarm = false }: FigureProps) {
+  return (
+    <div className="px-5 py-4 sm:px-6 sm:py-5">
+      <p className="text-overline uppercase text-ink-500">{label}</p>
+      <p className={cn('mt-1.5 text-[24px] font-bold leading-8 tracking-[-0.02em]', alarm ? 'text-danger' : 'text-ink-900')}>{value}</p>
+      {(delta || detail) && (
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 text-caption text-ink-500">
           {delta && <DeltaIndicator delta={delta} />}
-          {footnote && <span className="text-caption text-ink-500">{footnote}</span>}
+          {detail}
         </div>
       )}
     </div>
