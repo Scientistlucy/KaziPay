@@ -1,7 +1,8 @@
 const currencyFormatters = new Map<string, Intl.NumberFormat>()
 
-export function formatMoney(amount: number, currency = 'KES', options: { compact?: boolean } = {}) {
-  const key = `${currency}-${options.compact ? 'c' : 'f'}`
+/** `compact` for dashboards (KES 1.2M), `whole` for large hero figures without cents, default for documents and tables. */
+export function formatMoney(amount: number, currency = 'KES', options: { compact?: boolean; whole?: boolean } = {}) {
+  const key = `${currency}-${options.compact ? 'c' : options.whole ? 'w' : 'f'}`
   let formatter = currencyFormatters.get(key)
   if (!formatter) {
     formatter = new Intl.NumberFormat('en-KE', {
@@ -9,8 +10,8 @@ export function formatMoney(amount: number, currency = 'KES', options: { compact
       currency,
       currencyDisplay: 'code',
       notation: options.compact ? 'compact' : 'standard',
-      maximumFractionDigits: options.compact ? 1 : 2,
-      minimumFractionDigits: options.compact ? 0 : 2,
+      maximumFractionDigits: options.compact ? 1 : options.whole ? 0 : 2,
+      minimumFractionDigits: options.compact || options.whole ? 0 : 2,
     })
     currencyFormatters.set(key, formatter)
   }
