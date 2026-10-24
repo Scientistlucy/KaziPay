@@ -18,6 +18,17 @@ KaziPay is a calm, precise workspace for consultants who want to **do the work a
 
 **Hard rules:** no emojis anywhere in the UI. One font family. Blue is the only brand color. Color never carries meaning alone: every status has a text label and usually an icon or dot.
 
+### 1.1 Aesthetic stance: the ledger (revised 2026-10-24)
+
+A review of the first build found it read as generic: colored icon tiles on every stat, green, amber, blue and red competing, a promo box in the sidebar, invented marketing numbers, and dashboards stacking six sections. The revision commits to one stance:
+
+- **Refined minimal and editorial ledger.** Pages read like a well-kept accounts book. Large tabular money figures, hairline rules between rows, labels in small caps, and few boxes. Cards group content; they aren't decoration.
+- **One blue, one alarm.** Blue plus ink neutrals carry everything. Red is reserved for what costs money or can't be undone (overdue, failed, delete). There is **no green and no amber**. Completion is shown by a solid blue fill and a check icon.
+- **Recognition anchor: the payment rail.** Every invoice shows a four-stage track (Draft, Sent, Viewed, Paid) as small blue segments with a text label. The invoice page shows it as a full stepper. If the logo were removed, the rail, the big tabular figures and the single blue would identify the product.
+- **Steppers where a task has stages:** getting started (dashboard), registration (2 steps), new client (2 steps), the invoice lifecycle, and the M-Pesa request.
+- **Less per screen.** Each page has one primary action and at most three content regions. Secondary information moves to detail pages, tooltips or menus.
+- **No decoration without a job.** No glows, no icon tiles on figures, no invented statistics, no promo cards.
+
 ---
 
 ## 2. Design tokens
@@ -59,16 +70,14 @@ Tokens are defined once as CSS variables in `frontend/src/styles.css` and expose
 | ink-800 | `#202939` | Strong text |
 | ink-900 | `#121826` | Headings, amounts |
 
-**Feedback.** Each has a text/icon color, a soft background, and a border.
+**Feedback.** Only two roles. There are no success or warning colors (see 1.1).
 
 | Role | Text/icon | Soft bg | Border | Use |
 |------|-----------|---------|--------|-----|
-| success | `#0F7B53` | `#E7F6EF` | `#B4E3CD` | Paid, approved, saved |
-| warning | `#A15C07` | `#FEF5E6` | `#F8D9A0` | Partially paid, due soon, unsaved changes |
-| danger | `#C8321F` | `#FDEEEC` | `#F5C2BA` | Overdue, errors, destructive actions |
-| info | brand-700 | brand-50 | brand-200 | Neutral notices |
+| brand | brand-700 | brand-50 | brand-200 | Saved, sent, in progress, notices. Completed and paid use solid brand-600 with white text |
+| danger | `#C8321F` | `#FDEEEC` | `#F5C2BA` | Overdue, failed, errors, destructive actions |
 
-Danger buttons use `#C8321F` with hover `#A82918`.
+Danger buttons use `#C8321F` with hover `#A82918`. "Needs a look" states (due soon, partially paid, unsaved changes) use brand weight and wording, not a third color.
 
 **Charts.** A single series uses brand-600 (area fills are brand-600 at about 10% opacity). Two series use **chart-1 brand-700 `#1A41BA`** and **chart-2 brand-400 `#5A8CF7`**. This pair passed the palette validator (lightness band, chroma floor, colorblind separation ΔE ≥ 20, contrast ≥ 3:1 on white). Neutral gray failed it as a series color, so gray is never used for a series. Ordered categories with one measure (A/R aging buckets) use one color. Feedback colors appear in charts only when the data *means* that state.
 
@@ -176,15 +185,21 @@ Sizes: **sm** 32px (13px text, 12px padding), **md** 40px (14px text, 16px paddi
 - **Unsaved changes:** an edited settings form shows a sticky save bar ("You have unsaved changes", Discard, Save). Leaving with unsaved edits asks for confirmation.
 
 ### Badges and status
-Pill (radius-full), 22px tall, caption text, with a leading dot or icon. Statuses map to fixed tones:
+Pill (radius-full), 22px tall, caption text, with a leading dot or icon. Status is shown by **weight within one blue**, not by hue. The strongest fill means finished, and red means trouble:
 
-| Status | Tone | Label |
-|--------|------|-------|
-| DRAFT, VOID, CANCELLED, ARCHIVED | neutral | Draft / Void / Cancelled / Archived |
-| SENT, VIEWED, IN_PROGRESS, ACTIVE | brand | Sent / Viewed / In progress / Active |
-| PARTIALLY_PAID, REVIEW, DUE_SOON | warning | Partially paid / In review / Due soon |
-| PAID, DONE, APPROVED | success | Paid / Done / Approved |
-| OVERDUE, REJECTED, FAILED | danger | Overdue / Rejected / Failed |
+| Status | Tone | Look | Label |
+|--------|------|------|-------|
+| DRAFT, VOID, CANCELLED, ARCHIVED, TODO, ON_HOLD | neutral | ink-100 fill, ink-600 text | Draft / Void / … |
+| SENT, VIEWED, ACTIVE, IN_PROGRESS, PENDING, INVITED | brand | brand-50 fill, brand-700 text, dot | Sent / Viewed / … |
+| PARTIALLY_PAID, REVIEW, SUBMITTED | partial | white, brand-300 ring, half-filled dot | Partially paid / In review / … |
+| PAID, DONE, COMPLETED, APPROVED, SUCCEEDED | done | solid brand-600, white text, check icon | Paid / Done / … |
+| OVERDUE, FAILED, REJECTED, AT_RISK | danger | danger soft fill, danger text, dot | Overdue / Failed / … |
+
+Badges only appear when a status tells the reader something. A list already filtered to "Active" doesn't repeat "Active" on every row.
+
+### Payment rail and steppers
+- **PaymentRail** (invoice lists): four 3px segments for Draft, Sent, Viewed and Paid. Reached segments are brand-600 and the rest ink-200. Overdue paints the reached segments red. The text label always sits beside it.
+- **Stepper:** numbered circles joined by a hairline. Done steps are solid brand-600 with a check icon, the current step has a brand ring, and upcoming steps are ink. Horizontal on desktop, it stacks on mobile, and it uses `aria-current="step"`.
 
 ### Cards
 White surface, 1px ink-200 border, radius-lg, shadow-card. An optional header has a heading, an optional description, and right-aligned actions, followed by a 1px divider or 16px gap. Never nest a card inside a card. Use a subtle ink-25 well instead.
