@@ -11,12 +11,6 @@ import javax.sql.DataSource;
 
 @Configuration
 public class TenantDataSourceConfig {
-    @Bean
-    @ConfigurationProperties("spring.datasource")
-    DataSourceProperties kazipayDataSourceProperties() {
-        return new DataSourceProperties();
-    }
-
     @Bean(name = "unwrappedDataSource")
     @ConfigurationProperties("spring.datasource.hikari")
     DataSource unwrappedDataSource(DataSourceProperties properties) {
