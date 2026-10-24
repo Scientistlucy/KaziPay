@@ -30,6 +30,8 @@
 
 | # | Date | Step | Category | Title | Severity | Status | ⭐ |
 |---|------|------|----------|-------|----------|--------|----|
+| 003 | 2026-10-24 | Step 6 | database | audit_logs had RLS enabled but not forced | 🟠 | Solved | ⭐ |
+| 002 | 2026-10-24 | Step 6 | test | Integration tests had never run (surefire skipped *IT) | 🟠 | Solved | ⭐ |
 | 001 | 2026-10-24 | Step 6 | config | App fails to start: two DataSourceProperties beans | 🔴 | Solved | ⭐ |
 
 ---
@@ -92,6 +94,104 @@ mvn verify
 ---
 
 ## Log
+
+### #003 — audit_logs had RLS enabled but not forced  ⭐
+- **Date:** 2026-10-24
+- **Build step:** Step 6 – Clients
+- **Category:** database
+- **Severity:** 🟠
+- **Status:** Solved
+- **Interview/video story?** Yes ⭐
+
+**1. What I was trying to do**
+Get the first CI run green after enabling the integration tests (see #002).
+
+**2. What happened (the symptom)**
+`SchemaIntegrityIT.tenantTablesHaveForcedRls` failed for one table.
+
+**3. Exact error / logs**
+```
+SchemaIntegrityIT.tenantTablesHaveForcedRls:44 [audit_logs]
+Expecting value to be true but was false
+```
+
+**4. How I reproduced it**
+```bash
+mvn -B verify   # in GitHub Actions; Docker required
+```
+
+**5. What I tried that did NOT work**
+- Nothing else was tried. The assertion names the table.
+
+**6. Root cause**
+V9 created `audit_logs` with its own read and insert policies and `ENABLE ROW LEVEL SECURITY`, but no `FORCE`. Without `FORCE`, the table owner ignores the policies. The app role was still restricted because it doesn't own the table, but this broke the project rule that every tenant table forces RLS. The backend spec itself is inconsistent on this point: §5.9 omits `FORCE` while §5.10 requires it.
+
+**7. The fix**
+A new migration, because V9 is already applied: `V12__force_rls_on_audit_logs.sql`.
+```sql
+ALTER TABLE audit_logs FORCE ROW LEVEL SECURITY;
+```
+
+**8. How I verified it is fixed**
+CI is green with `SchemaIntegrityIT`, and V12 was applied to the Neon development database. `SchemaIntegrityIT` will fail again if any future tenant table misses `FORCE`.
+
+**9. What I learned / how to avoid it**
+A schema test that checks every table is better than reviewing migrations by eye. It found a gap that also exists in the spec text.
+
+**10. Links**
+- Commit: `fix(db): force row-level security on audit_logs (V12)`
+- Related: #002
+- AI used? Yes. Claude Code wrote the migration. Verified by CI and by Flyway applying V12 on Neon.
+
+---
+
+### #002 — Integration tests had never run (surefire skipped *IT)  ⭐
+- **Date:** 2026-10-24
+- **Build step:** Step 6 – Clients
+- **Category:** test
+- **Severity:** 🟠
+- **Status:** Solved
+- **Interview/video story?** Yes ⭐
+
+**1. What I was trying to do**
+Run the tenant-isolation integration tests in CI, because Docker isn't installed on my development machine.
+
+**2. What happened (the symptom)**
+`TenantIsolationIT`, written in Step 2, had never executed. Maven Surefire only runs `*Test` classes, and failsafe wasn't configured. Once it did run, its setup failed immediately.
+
+**3. Exact error / logs**
+```
+TenantIsolationIT.setUp:31 » PSQL ERROR: function enable_tenant_rls(unknown) does not exist
+```
+
+**4. How I reproduced it**
+```bash
+mvn -B verify   # with maven-failsafe-plugin enabled
+```
+
+**5. What I tried that did NOT work**
+- Nothing else was tried. The missing function is created by migration V1.
+
+**6. Root cause**
+Two problems. (1) The build had no failsafe plugin, so `*IT` classes were silently skipped and a broken test looked like a passing build. (2) The test called `enable_tenant_rls()` on an empty container without running the migrations that define it.
+
+**7. The fix**
+- Added `maven-failsafe-plugin` to `backend/pom.xml` and renamed the Docker-based `SchemaIntegrityTest` to `SchemaIntegrityIT`.
+- `TenantIsolationIT.setUp` now runs Flyway before creating its probe table.
+- Added a GitHub Actions workflow that runs `mvn verify`.
+
+**8. How I verified it is fixed**
+CI run: all 8 integration tests pass (`SchemaIntegrityIT`, `TenantIsolationIT`, `ClientIsolationIT`) along with 22 unit tests.
+
+**9. What I learned / how to avoid it**
+A test that never runs is worse than no test, because it gives false confidence. Check the test count in the build output after adding a new kind of test.
+
+**10. Links**
+- Commits: `build: run Testcontainers integration tests with failsafe`, `fix(test): migrate schema before TenantIsolationIT creates its probe`, `ci: add GitHub Actions pipeline for backend and frontend`
+- Related: #003
+- AI used? Yes. Claude Code found and fixed it. Verified by the green CI run.
+
+---
 
 ### #001 — App fails to start: two DataSourceProperties beans  ⭐
 - **Date:** 2026-10-24
