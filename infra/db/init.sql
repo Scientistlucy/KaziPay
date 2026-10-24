@@ -10,3 +10,7 @@ END $$;
 
 GRANT CONNECT ON DATABASE kazipay TO kazipay_app;
 GRANT USAGE ON SCHEMA public TO kazipay_app;
+-- Tables, sequences and functions created by migrations (as kazipay_owner) are usable by the app role.
+ALTER DEFAULT PRIVILEGES FOR ROLE kazipay_owner IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO kazipay_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE kazipay_owner IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO kazipay_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE kazipay_owner IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO kazipay_app;
