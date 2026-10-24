@@ -1,5 +1,6 @@
 package com.kazipay.common.tenant;
 
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,8 @@ class TenantIsolationIT {
     static void setUp() throws Exception {
         tenantA = UUID.randomUUID();
         tenantB = UUID.randomUUID();
+        // enable_tenant_rls and app_tenant_id are created by V1, so the probe table needs the real migrations.
+        Flyway.configure().dataSource(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword()).load().migrate();
         try (var connection = DriverManager.getConnection(postgres.getJdbcUrl(), postgres.getUsername(), postgres.getPassword());
              var statement = connection.createStatement()) {
             statement.execute("CREATE TABLE tenant_probe (id uuid PRIMARY KEY, tenant_id uuid NOT NULL, value varchar(50) NOT NULL)");
