@@ -1,3 +1,4 @@
+import { invoiceTotals } from '../lib/invoice'
 import type {
   Activity, Client, Contact, DashboardSummary, Invoice, Milestone, Payment, Project, Task, TaxRate, TeamMember, TimesheetRow, Workspace,
 } from '../types'
@@ -166,7 +167,8 @@ export const invoices: Invoice[] = invoiceSeed.map(([suffix, clientId, projectNa
       { description: projectName ? `${projectName}: engineering` : 'Consulting services', quantity: engineering / rate, unitPrice: rate, taxRate: 16 },
       { description: projectName ? `${projectName}: design and QA` : 'Workshop facilitation', quantity: 1, unitPrice: subtotal - engineering, taxRate: 16 },
     ],
-    amountPaid: paid,
+    // Paid invoices are settled in full; partial payments use the seeded amount.
+    amountPaid: status === 'PAID' ? Math.round(subtotal * 1.16 * 100) / 100 : paid,
     notes: 'Pay via M-Pesa Paybill 400200, account number is the invoice number. Thank you for your business.',
   }
 })
@@ -193,30 +195,45 @@ export const activity: Activity[] = [
   { id: 'ac_7', kind: 'project', actor: 'Brian Mwangi', text: 'completed milestone', target: 'Live map and dispatch board', at: offset(-6) },
 ]
 
+// Client balances, like the dashboard below, come from the sample invoices so every screen agrees.
+clients.forEach((client) => {
+  client.outstanding = invoices
+    .filter((invoice) => invoice.clientId === client.id && ['SENT', 'VIEWED', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status))
+    .reduce((total, invoice) => total + invoiceTotals(invoice).balance, 0)
+})
+
+// Dashboard figures are derived from the sample invoices so every screen agrees.
+const kesInvoices = invoices.filter((invoice) => invoice.currency === 'KES')
+const balanceOf = (invoice: Invoice) => invoiceTotals(invoice).balance
+const openInvoices = kesInvoices.filter((invoice) => ['SENT', 'VIEWED', 'PARTIALLY_PAID', 'OVERDUE'].includes(invoice.status))
+const overdueInvoices = kesInvoices.filter((invoice) => invoice.status === 'OVERDUE')
+const sumBalances = (list: Invoice[]) => list.reduce((total, invoice) => total + balanceOf(invoice), 0)
+const byId = (id: string) => invoices.find((invoice) => invoice.id === id)!
+const overdueDays = (id: string) => Math.max(1, Math.round((now - new Date(byId(id).dueDate).getTime()) / DAY))
+
 export const dashboard: DashboardSummary = {
-  outstanding: 1_101_500,
+  outstanding: sumBalances(openInvoices),
   outstandingDelta: -8.4,
-  overdue: 371_000,
-  overdueCount: 4,
+  overdue: sumBalances(overdueInvoices),
+  overdueCount: overdueInvoices.length,
   collectedThisMonth: 486_000,
   collectedDelta: 12.6,
-  hoursThisWeek: 31.5,
-  billableShare: 84,
+  hoursThisWeek: 0,
+  billableShare: 0,
   revenue: [
     ['Nov', 412_000], ['Dec', 356_000], ['Jan', 298_000], ['Feb', 445_000], ['Mar', 520_000], ['Apr', 488_000],
     ['May', 610_000], ['Jun', 575_000], ['Jul', 642_000], ['Aug', 598_000], ['Sep', 705_000], ['Oct', 486_000],
   ].map(([month, collected]) => ({ month: month as string, collected: collected as number })),
   aging: [
-    { bucket: 'Current', amount: 730_500, overdue: false },
-    { bucket: '1–30 days', amount: 193_500, overdue: true },
-    { bucket: '31–60 days', amount: 132_000, overdue: true },
-    { bucket: '60+ days', amount: 45_500, overdue: true },
+    { bucket: 'Current', amount: sumBalances(openInvoices.filter((i) => i.status !== 'OVERDUE')), overdue: false },
+    { bucket: '1–30 days', amount: sumBalances(overdueInvoices.filter((i) => now - new Date(i.dueDate).getTime() <= 30 * DAY)), overdue: true },
+    { bucket: '31–60 days', amount: sumBalances(overdueInvoices.filter((i) => now - new Date(i.dueDate).getTime() > 30 * DAY)), overdue: true },
   ],
   attention: [
-    { id: 'at_1', kind: 'overdue', title: 'INV-2026-0044 is 7 days overdue', detail: 'Tausi Apparel', amount: 128_000, href: '/invoices/in_0044' },
+    { id: 'at_1', kind: 'overdue', title: `INV-2026-0044 is ${overdueDays('in_0044')} days overdue`, detail: 'Tausi Apparel', amount: balanceOf(byId('in_0044')), href: '/invoices/in_0044' },
     { id: 'at_2', kind: 'approval', title: '38 hours waiting for approval', detail: 'Grace Wambui · Week 43', href: '/time' },
     { id: 'at_3', kind: 'due', title: 'Patient booking portal due in 5 days', detail: 'Baraka Health Clinics · 71% complete', href: '/projects/pr_2' },
-    { id: 'at_4', kind: 'overdue', title: 'INV-2026-0045 is 5 days overdue', detail: 'Pwani Fresh Foods', amount: 96_500, href: '/invoices/in_0045' },
+    { id: 'at_4', kind: 'overdue', title: `INV-2026-0045 is ${overdueDays('in_0045')} days overdue`, detail: 'Pwani Fresh Foods', amount: balanceOf(byId('in_0045')), href: '/invoices/in_0045' },
   ],
 }
 
@@ -226,6 +243,10 @@ export const timesheet: TimesheetRow[] = [
   { projectId: 'pr_5', projectName: 'Investor reporting retainer', clientName: 'Kilele Ventures', billable: true, hours: [1, 0, 1.5, 1, 0, 0, 0] },
   { projectId: 'internal', projectName: 'Internal: sales and admin', clientName: 'Mwangaza Studio', billable: false, hours: [1, 1, 0.5, 2.5, 0, 0, 0] },
 ]
+
+const weekHours = timesheet.flatMap((row) => row.hours).reduce((total, hours) => total + hours, 0)
+dashboard.hoursThisWeek = weekHours
+dashboard.billableShare = Math.round((timesheet.filter((row) => row.billable).flatMap((row) => row.hours).reduce((total, hours) => total + hours, 0) / weekHours) * 100)
 
 export const taxRates: TaxRate[] = [
   { id: 'tx_1', name: 'VAT', percent: 16, inclusive: false, isDefault: true },

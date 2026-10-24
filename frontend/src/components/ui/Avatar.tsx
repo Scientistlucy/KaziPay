@@ -26,11 +26,11 @@ export function Avatar({ name, size = 'sm', className, square = false }: AvatarP
   )
 }
 
-export function AvatarGroup({ names, max = 3, size = 'xs' }: { names: string[]; max?: number; size?: keyof typeof sizes }) {
+export function AvatarGroup({ names, max = 3, size = 'sm' }: { names: string[]; max?: number; size?: keyof typeof sizes }) {
   const shown = names.slice(0, max)
   const rest = names.length - shown.length
   return (
-    <div className="flex items-center -space-x-1.5" aria-label={names.join(', ')} role="img">
+    <div className="flex items-center -space-x-1" aria-label={names.join(', ')} role="img">
       {shown.map((name) => <Avatar key={name} name={name} size={size} className="ring-2 ring-white" />)}
       {rest > 0 && (
         <span className={cn('inline-flex items-center justify-center rounded-full bg-ink-100 font-semibold text-ink-600 ring-2 ring-white', sizes[size])}>+{rest}</span>

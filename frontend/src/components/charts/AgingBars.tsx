@@ -10,7 +10,7 @@ export function AgingBars({ data }: { data: Bucket[] }) {
   return (
     <ul className="space-y-4">
       {data.map((bucket) => {
-        const share = Math.round((bucket.amount / total) * 100)
+        const share = total ? Math.round((bucket.amount / total) * 100) : 0
         return (
           <li key={bucket.bucket}>
             <div className="mb-1.5 flex items-baseline justify-between gap-2">
@@ -24,7 +24,7 @@ export function AgingBars({ data }: { data: Bucket[] }) {
                     tabIndex={0}
                     aria-label={`${bucket.bucket}: ${formatMoney(bucket.amount)}`}
                     className="h-3 rounded-r-[4px] bg-brand-600 transition-opacity duration-fast hover:opacity-85 focus-ring"
-                    style={{ width: `${Math.max(2, (bucket.amount / max) * 100)}%` }}
+                    style={{ width: bucket.amount === 0 ? 0 : `${Math.max(2, (bucket.amount / max) * 100)}%` }}
                   />
                 </Tooltip>
               </div>
